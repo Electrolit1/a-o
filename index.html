@@ -33,7 +33,6 @@
 
         .btn-group {
             display: flex;
-            gap: 10px;
             justify-content: center;
             margin-top: 25px;
         }
@@ -42,22 +41,17 @@
             background: linear-gradient(45deg, #ff416c, #ff4b2b);
             border: none;
             color: white;
-            padding: 15px 30px;
-            font-size: 1.2rem;
+            padding: 15px 40px;
+            font-size: 1.3rem;
             border-radius: 50px;
             cursor: pointer;
             transition: 0.3s;
             font-weight: bold;
         }
 
-        .btn-test {
-            background: #333;
-            border: 1px solid #555;
-            color: #aaa;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            border-radius: 50px;
-            cursor: pointer;
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 65, 108, 0.5);
         }
 
         #mensaje-tiempo {
@@ -82,7 +76,7 @@
         .track {
             display: inline-block;
             white-space: nowrap;
-            animation: scroll 20s linear infinite;
+            animation: scroll 25s linear infinite;
         }
 
         .track img {
@@ -106,7 +100,6 @@
         
         <div class="btn-group" id="botones">
             <button class="btn" onclick="mostrarAlertaTiempo()">¿Cuánto falta?</button>
-            <button class="btn-test" onclick="lanzarEfectoFinal()">Prueba Modo 2026</button>
         </div>
 
         <div id="mensaje-tiempo"></div>
@@ -119,16 +112,14 @@
         const fechaObjetivo = new Date('January 1, 2026 00:00:00').getTime();
         let yaEsAñoNuevo = false;
 
-        // ESTA FUNCIÓN SE EJECUTA CADA 1 SEGUNDO AUTOMÁTICAMENTE
         const temporizadorGeneral = setInterval(function() {
             const ahora = new Date().getTime();
             const diferencia = fechaObjetivo - ahora;
 
-            // Si llegamos a 0 y aún no se ha activado el modo año nuevo
             if (diferencia <= 0 && !yaEsAñoNuevo) {
                 yaEsAñoNuevo = true;
                 lanzarEfectoFinal();
-                clearInterval(temporizadorGeneral); // Detener el reloj
+                clearInterval(temporizadorGeneral);
             }
         }, 1000);
 
@@ -143,37 +134,47 @@
                 const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
                 const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
                 display.innerText = `Faltan: ${dias}d ${horas}h ${minutos}m ${segundos}s`;
+            } else {
+                lanzarEfectoFinal();
             }
         }
 
         function lanzarEfectoFinal() {
             yaEsAñoNuevo = true;
             
-            // 1. Eliminar carrusel
             const carrusel = document.getElementById('carrusel-fotos');
             if(carrusel) carrusel.remove();
 
-            // 2. Cambiar textos
             document.getElementById('titulo').innerText = "Ivonia Network | 2026";
-            document.getElementById('mensaje-tiempo').innerHTML = `<span style="font-size: 2.5rem; color: #ffd700;">¡FELIZ AÑO NUEVO!</span>`;
+            document.getElementById('mensaje-tiempo').innerHTML = `<span style="font-size: 2.5rem; color: #ffd700; display: block; margin: 20px 0;">¡FELIZ AÑO NUEVO!</span>`;
             
-            // 3. Quitar botones
-            document.getElementById('botones').style.display = 'none';
-
-            // 4. Iniciar confeti
+            const botones = document.getElementById('botones');
+            if(botones) botones.style.display = 'none';
             lanzarCohetes();
         }
 
         function lanzarCohetes() {
-            var duration = 30 * 1000; // 30 segundos de cohetes
+            var duration = 30 * 1000; 
             var animationEnd = Date.now() + duration;
 
             var interval = setInterval(function() {
                 var timeLeft = animationEnd - Date.now();
                 if (timeLeft <= 0) return clearInterval(interval);
 
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#ff416c', '#ffd700'] });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#ff4b2b', '#ffffff'] });
+                confetti({ 
+                    particleCount: 6, 
+                    angle: 60, 
+                    spread: 55, 
+                    origin: { x: 0, y: 0.8 }, 
+                    colors: ['#ff416c', '#ffd700', '#ffffff'] 
+                });
+                confetti({ 
+                    particleCount: 6, 
+                    angle: 120, 
+                    spread: 55, 
+                    origin: { x: 1, y: 0.8 }, 
+                    colors: ['#ff4b2b', '#ffffff', '#ffd700'] 
+                });
             }, 100);
         }
     </script>
