@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="icon" href="img/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/logo.png">
+    <link rel="shortcut icon" href="img/logo.png" type="image/png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ivonia Network | 2026</title>
@@ -18,9 +21,20 @@
             margin: 0;
             overflow: hidden;
             text-align: center;
+            cursor: crosshair;
         }
 
-        .container { padding: 20px; z-index: 2; }
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container { position: relative; padding: 20px; z-index: 2; }
 
         .logo {
             max-width: 180px;
@@ -35,93 +49,280 @@
             display: flex;
             justify-content: center;
             margin-top: 25px;
+            gap: 15px;
         }
 
         .btn {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b);
-            border: none;
-            color: white;
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 50%, #4dd0e1 100%);
+            border: 2px solid #ffffff;
+            color: #004d40;
             padding: 15px 40px;
             font-size: 1.3rem;
             border-radius: 50px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.4s;
             font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.5);
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
 
         .btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 65, 108, 0.5);
+            box-shadow: 0 0 25px rgba(178, 235, 242, 0.8), inset 0 0 20px white;
+            color: #000;
+        }
+
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(45deg);
+            pointer-events: none;
+            transition: 0.5s;
+        }
+
+        .btn:hover::after {
+            left: 120%;
+        }
+
+        .music-player {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 15px;
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            border: 1px solid rgba(173, 216, 230, 0.3);
+        }
+
+        .btn-music {
+            background: #1a2a3a;
+            border: 1px solid #add8e6;
+            color: #add8e6;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .btn-music:hover {
+            background: #2c3e50;
+            box-shadow: 0 0 10px #add8e6;
         }
 
         #mensaje-tiempo {
             margin-top: 20px;
             font-weight: bold;
             font-size: 1.4rem;
-            color: #ff4b2b;
+            color: #80deea;
             min-height: 35px;
-        }
-
-        /* CARRUSEL DE IMÁGENES */
-        #carrusel-fotos {
-            position: absolute;
-            bottom: 30px;
-            width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px 0;
-        }
-
-        .track {
-            display: inline-block;
-            white-space: nowrap;
-            animation: scroll 25s linear infinite;
-        }
-
-        .track img {
-            height: 120px;
-            margin: 0 15px;
-            border-radius: 10px;
-            border: 2px solid #444;
-        }
-
-        @keyframes scroll {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
+            text-shadow: 0 0 10px rgba(128, 222, 234, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <div class="container" id="main-content">
+    <canvas id="snow-canvas"></canvas>
+
+    <div class="container">
         <img src="img/logo.png" alt="Ivonia Logo" class="logo">
         <h1 id="titulo">Año Nuevo 2026</h1>
         
         <div class="btn-group" id="botones">
-            <button class="btn" onclick="mostrarAlertaTiempo()">¿Cuánto falta?</button>
+            <button class="btn" onclick="iniciarExperiencia()">¿Cuánto falta?</button>
         </div>
 
         <div id="mensaje-tiempo"></div>
-        <p id="frase-final">Nos vienen cosas muy buenas por delante.</p>
+        <p id="frase-final">Detrás de cada gran sueño hay un nuevo comienzo. Gracias por ser parte de</p>
+        <p id="frase-final">Ivonia Network. Vamos a hacer que este 2026 sea legendario...</p>
+
+        <div class="music-player">
+            <button class="btn-music" onclick="toggleMusica()" id="btn-play-pause">▶ Play</button>
+            <button class="btn-music" onclick="ajustarVolumen(-0.1)">-</button>
+            <button class="btn-music" onclick="ajustarVolumen(0.1)">+</button>
+        </div>
     </div>
 
-    </div>
+    <audio id="audio-ambiente" loop src="music/otra.mp3"></audio>
+    <audio id="audio-especial" src="music/año1.mp3"></audio>
 
     <script>
         const fechaObjetivo = new Date('January 1, 2026 00:00:00').getTime();
         let yaEsAñoNuevo = false;
+        let faseEspecialIniciada = false;
+        let nieveActiva = true;
+        
+        const audioAmbiente = document.getElementById('audio-ambiente');
+        const audioEspecial = document.getElementById('audio-especial');
+        const btnPlayPause = document.getElementById('btn-play-pause');
+
+        const canvas = document.getElementById('snow-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouseParticles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height - canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.velX = Math.random() * 0.5 - 0.25;
+            }
+            update() {
+                this.y += this.speed;
+                this.x += this.velX;
+                if (this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class MouseSnow {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 4 + 2;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 1 + 1;
+                this.life = 1.0; 
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life -= 0.02;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.life})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (nieveActiva) {
+                for(let i=0; i<2; i++) { 
+                    mouseParticles.push(new MouseSnow(e.clientX, e.clientY));
+                }
+            }
+        });
+
+        for (let i = 0; i < 150; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (nieveActiva) {
+                // Nieve de fondo
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                // Nieve del mouse
+                for (let i = 0; i < mouseParticles.length; i++) {
+                    mouseParticles[i].update();
+                    mouseParticles[i].draw();
+                    if (mouseParticles[i].life <= 0) {
+                        mouseParticles.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            requestAnimationFrame(animateSnow);
+        }
+        animateSnow();
+
+        function getAudioActual() {
+            return faseEspecialIniciada ? audioEspecial : audioAmbiente;
+        }
+
+        function iniciarExperiencia() {
+            mostrarAlertaTiempo();
+            const ahora = new Date().getTime();
+            const diferencia = fechaObjetivo - ahora;
+
+            if (diferencia > 300000) {
+                audioAmbiente.play().then(() => btnPlayPause.innerText = "⏸ Pausa");
+            } else {
+                activarMusicaEspecial();
+            }
+        }
+
+        function toggleMusica() {
+            const actual = getAudioActual();
+            if (actual.paused) {
+                actual.play();
+                btnPlayPause.innerText = "⏸";
+            } else {
+                actual.pause();
+                btnPlayPause.innerText = "▶";
+            }
+        }
+
+        function ajustarVolumen(cambio) {
+            const actual = getAudioActual();
+            let v = actual.volume + cambio;
+            if (v >= 0 && v <= 1) {
+                audioAmbiente.volume = v;
+                audioEspecial.volume = v;
+            }
+        }
 
         const temporizadorGeneral = setInterval(function() {
             const ahora = new Date().getTime();
             const diferencia = fechaObjetivo - ahora;
 
+            if (diferencia <= 300000 && diferencia > 0 && !faseEspecialIniciada) {
+                activarMusicaEspecial();
+            }
+
             if (diferencia <= 0 && !yaEsAñoNuevo) {
                 yaEsAñoNuevo = true;
+                nieveActiva = false; 
                 lanzarEfectoFinal();
                 clearInterval(temporizadorGeneral);
             }
         }, 1000);
+
+        function activarMusicaEspecial() {
+            faseEspecialIniciada = true;
+            audioAmbiente.pause();
+            audioAmbiente.currentTime = 0;
+            audioEspecial.play().then(() => {
+                btnPlayPause.innerText = "⏸ Pausa";
+            }).catch(e => {
+                btnPlayPause.innerText = "▶ Play";
+            });
+        }
 
         function mostrarAlertaTiempo() {
             const ahora = new Date().getTime();
@@ -141,13 +342,8 @@
 
         function lanzarEfectoFinal() {
             yaEsAñoNuevo = true;
-            
-            const carrusel = document.getElementById('carrusel-fotos');
-            if(carrusel) carrusel.remove();
-
             document.getElementById('titulo').innerText = "Ivonia Network | 2026";
             document.getElementById('mensaje-tiempo').innerHTML = `<span style="font-size: 2.5rem; color: #ffd700; display: block; margin: 20px 0;">¡FELIZ AÑO NUEVO!</span>`;
-            
             const botones = document.getElementById('botones');
             if(botones) botones.style.display = 'none';
             lanzarCohetes();
@@ -156,25 +352,11 @@
         function lanzarCohetes() {
             var duration = 30 * 1000; 
             var animationEnd = Date.now() + duration;
-
             var interval = setInterval(function() {
                 var timeLeft = animationEnd - Date.now();
                 if (timeLeft <= 0) return clearInterval(interval);
-
-                confetti({ 
-                    particleCount: 6, 
-                    angle: 60, 
-                    spread: 55, 
-                    origin: { x: 0, y: 0.8 }, 
-                    colors: ['#ff416c', '#ffd700', '#ffffff'] 
-                });
-                confetti({ 
-                    particleCount: 6, 
-                    angle: 120, 
-                    spread: 55, 
-                    origin: { x: 1, y: 0.8 }, 
-                    colors: ['#ff4b2b', '#ffffff', '#ffd700'] 
-                });
+                confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#00fbff', '#ffd700', '#ffffff'] });
+                confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#00fbff', '#ffffff', '#ffd700'] });
             }, 100);
         }
     </script>
