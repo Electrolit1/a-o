@@ -50,6 +50,7 @@
             justify-content: center;
             margin-top: 25px;
             gap: 15px;
+            transition: opacity 0.5s ease;
         }
 
         .btn {
@@ -138,13 +139,13 @@
         <img src="img/logo.png" alt="Ivonia Logo" class="logo">
         <h1 id="titulo">Año Nuevo 2026</h1>
         
-        <div class="btn-group" id="botones">
+        <div class="btn-group" id="contenedor-boton">
             <button class="btn" onclick="iniciarExperiencia()">¿Cuánto falta?</button>
         </div>
 
         <div id="mensaje-tiempo"></div>
-        <p id="frase-final">Detrás de cada gran sueño hay un nuevo comienzo. Gracias por ser parte de</p>
-        <p id="frase-final">Ivonia Network. Vamos a hacer que este 2026 sea legendario...</p>
+        <p id="frase-final-1">Detrás de cada gran sueño hay un nuevo comienzo. Gracias por ser parte de</p>
+        <p id="frase-final-2">Ivonia Network. Vamos a hacer que este 2026 sea legendario...</p>
 
         <div class="music-player">
             <button class="btn-music" onclick="toggleMusica()" id="btn-play-pause">▶ Play</button>
@@ -161,11 +162,13 @@
         let yaEsAñoNuevo = false;
         let faseEspecialIniciada = false;
         let nieveActiva = true;
+        let intervaloContador; 
         
         const audioAmbiente = document.getElementById('audio-ambiente');
         const audioEspecial = document.getElementById('audio-especial');
         const btnPlayPause = document.getElementById('btn-play-pause');
 
+        // Configuración de Nieve
         const canvas = document.getElementById('snow-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -175,14 +178,11 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
-
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
         class Particle {
-            constructor() {
-                this.reset();
-            }
+            constructor() { this.reset(); }
             reset() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height - canvas.height;
@@ -205,68 +205,50 @@
 
         class MouseSnow {
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
+                this.x = x; this.y = y;
                 this.size = Math.random() * 4 + 2;
                 this.speedX = Math.random() * 2 - 1;
                 this.speedY = Math.random() * 1 + 1;
                 this.life = 1.0; 
             }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life -= 0.02;
-            }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 0.02; }
             draw() {
                 ctx.fillStyle = `rgba(255, 255, 255, ${this.life})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
             }
         }
 
         window.addEventListener('mousemove', (e) => {
             if (nieveActiva) {
-                for(let i=0; i<2; i++) { 
-                    mouseParticles.push(new MouseSnow(e.clientX, e.clientY));
-                }
+                for(let i=0; i<2; i++) { mouseParticles.push(new MouseSnow(e.clientX, e.clientY)); }
             }
         });
 
-        for (let i = 0; i < 150; i++) {
-            particles.push(new Particle());
-        }
+        for (let i = 0; i < 150; i++) { particles.push(new Particle()); }
 
         function animateSnow() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             if (nieveActiva) {
-                // Nieve de fondo
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-
-                // Nieve del mouse
+                particles.forEach(p => { p.update(); p.draw(); });
                 for (let i = 0; i < mouseParticles.length; i++) {
-                    mouseParticles[i].update();
-                    mouseParticles[i].draw();
-                    if (mouseParticles[i].life <= 0) {
-                        mouseParticles.splice(i, 1);
-                        i--;
-                    }
+                    mouseParticles[i].update(); mouseParticles[i].draw();
+                    if (mouseParticles[i].life <= 0) { mouseParticles.splice(i, 1); i--; }
                 }
             }
             requestAnimationFrame(animateSnow);
         }
         animateSnow();
 
-        function getAudioActual() {
-            return faseEspecialIniciada ? audioEspecial : audioAmbiente;
-        }
+        function getAudioActual() { return faseEspecialIniciada ? audioEspecial : audioAmbiente; }
 
+        // --- LÓGICA DE INICIO ---
         function iniciarExperiencia() {
+            // OCULTAR EL BOTÓN INMEDIATAMENTE
+            document.getElementById('contenedor-boton').style.display = 'none';
+
             mostrarAlertaTiempo();
+            intervaloContador = setInterval(mostrarAlertaTiempo, 1000);
+
             const ahora = new Date().getTime();
             const diferencia = fechaObjetivo - ahora;
 
@@ -275,53 +257,6 @@
             } else {
                 activarMusicaEspecial();
             }
-        }
-
-        function toggleMusica() {
-            const actual = getAudioActual();
-            if (actual.paused) {
-                actual.play();
-                btnPlayPause.innerText = "⏸";
-            } else {
-                actual.pause();
-                btnPlayPause.innerText = "▶";
-            }
-        }
-
-        function ajustarVolumen(cambio) {
-            const actual = getAudioActual();
-            let v = actual.volume + cambio;
-            if (v >= 0 && v <= 1) {
-                audioAmbiente.volume = v;
-                audioEspecial.volume = v;
-            }
-        }
-
-        const temporizadorGeneral = setInterval(function() {
-            const ahora = new Date().getTime();
-            const diferencia = fechaObjetivo - ahora;
-
-            if (diferencia <= 300000 && diferencia > 0 && !faseEspecialIniciada) {
-                activarMusicaEspecial();
-            }
-
-            if (diferencia <= 0 && !yaEsAñoNuevo) {
-                yaEsAñoNuevo = true;
-                nieveActiva = false; 
-                lanzarEfectoFinal();
-                clearInterval(temporizadorGeneral);
-            }
-        }, 1000);
-
-        function activarMusicaEspecial() {
-            faseEspecialIniciada = true;
-            audioAmbiente.pause();
-            audioAmbiente.currentTime = 0;
-            audioEspecial.play().then(() => {
-                btnPlayPause.innerText = "⏸ Pausa";
-            }).catch(e => {
-                btnPlayPause.innerText = "▶ Play";
-            });
         }
 
         function mostrarAlertaTiempo() {
@@ -334,18 +269,55 @@
                 const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
                 const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+                
                 display.innerText = `Faltan: ${dias}d ${horas}h ${minutos}m ${segundos}s`;
+
+                if (diferencia <= 300000 && !faseEspecialIniciada) {
+                    activarMusicaEspecial();
+                }
             } else {
+                clearInterval(intervaloContador);
                 lanzarEfectoFinal();
             }
         }
 
+        function toggleMusica() {
+            const actual = getAudioActual();
+            if (actual.paused) {
+                actual.play();
+                btnPlayPause.innerText = "⏸ Pausa";
+            } else {
+                actual.pause();
+                btnPlayPause.innerText = "▶ Play";
+            }
+        }
+
+        function ajustarVolumen(cambio) {
+            const actual = getAudioActual();
+            let v = actual.volume + cambio;
+            if (v >= 0 && v <= 1) {
+                audioAmbiente.volume = v;
+                audioEspecial.volume = v;
+            }
+        }
+
+        function activarMusicaEspecial() {
+            faseEspecialIniciada = true;
+            audioAmbiente.pause();
+            audioAmbiente.currentTime = 0;
+            audioEspecial.play().then(() => {
+                btnPlayPause.innerText = "⏸ Pausa";
+            }).catch(e => {
+                btnPlayPause.innerText = "▶ Play";
+            });
+        }
+
         function lanzarEfectoFinal() {
+            if (yaEsAñoNuevo) return;
             yaEsAñoNuevo = true;
+            nieveActiva = false;
             document.getElementById('titulo').innerText = "Ivonia Network | 2026";
             document.getElementById('mensaje-tiempo').innerHTML = `<span style="font-size: 2.5rem; color: #ffd700; display: block; margin: 20px 0;">¡FELIZ AÑO NUEVO!</span>`;
-            const botones = document.getElementById('botones');
-            if(botones) botones.style.display = 'none';
             lanzarCohetes();
         }
 
